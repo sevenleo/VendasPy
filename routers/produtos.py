@@ -12,6 +12,12 @@ router = APIRouter(
     tags=["Produtos"],
 )
 
+# Endpoint público para obter a contagem de produtos
+@router.get("/count", response_model=int)
+def count_produtos(db: Session = Depends(database.get_db)):
+    count = db.query(models.Produto).count()
+    return count
+
 # Endpoint público para listar todos os produtos
 @router.get("/", response_model=List[schemas.Produto])
 def read_produtos(skip: int = 0, limit: int = 100, db: Session = Depends(database.get_db)):
