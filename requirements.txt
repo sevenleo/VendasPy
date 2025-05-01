@@ -1,7 +1,7 @@
 fastapi
 uvicorn[standard]
 SQLAlchemy
-# psycopg2-binary
+psycopg2-binary # Driver para PostgreSQL
 mysql-connector-python
 python-jose[cryptography]
 passlib[bcrypt]
