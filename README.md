@@ -65,12 +65,6 @@ DATABASE_URL=postgresql+asyncpg://user:pass@localhost:5432/dbname
 uvicorn main:app --reload
 ```
 
-## Documentação da API
-
-Acesse a documentação interativa em:
-- http://localhost:8000/docs (Swagger UI)
-- http://localhost:8000/redoc (Redoc)
-
 ### Endpoints Principais
 
 | Método | Endpoint       | Descrição                  | Autenticação |
