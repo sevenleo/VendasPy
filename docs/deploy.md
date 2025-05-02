@@ -1,9 +1,9 @@
+WINDOWS:
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+LINUX:
 gunicorn -w 4 -k uvicorn.workers.UvicornWorker main:app
-
-
 ou
-
-
 gunicorn -w ${WEB_CONCURRENCY:-$(($(nproc)*2+1))} -k uvicorn.workers.UvicornWorker main:app
 
 ## Configuração Recomendada

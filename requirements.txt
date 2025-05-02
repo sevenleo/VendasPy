@@ -10,3 +10,4 @@ slowapi
 Pillow
 gunicorn
 python-multipart
+jinja2
