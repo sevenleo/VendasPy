@@ -14,8 +14,8 @@ router = APIRouter(
     tags=["Authentication"],
 )
 
-ADMIN_USER = os.getenv("ADMIN_USER", "admin")
-ADMIN_PASS = os.getenv("ADMIN_PASS", "senha123") # Lembre-se que a senha no .env deve ser a real
+ADMIN_USER = os.getenv("ADMIN_USER")
+ADMIN_PASS = os.getenv("ADMIN_PASS") # Lembre-se que a senha no .env deve ser a real
 
 @router.post("/login", response_model=schemas.Token)
 def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):

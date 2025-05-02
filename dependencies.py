@@ -11,7 +11,7 @@ import database
 
 load_dotenv()
 
-JWT_SECRET = os.getenv("JWT_SECRET", "default_secret")
+JWT_SECRET = os.getenv("JWT_SECRET")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30 # Token expira em 30 minutos
 
@@ -61,7 +61,7 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
     #     raise credentials_exception
 
     # Verifica se o usuário é o admin definido nas variáveis de ambiente
-    admin_user = os.getenv("ADMIN_USER", "admin")
+    admin_user = os.getenv("ADMIN_USER")
     if token_data.username != admin_user:
          raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
