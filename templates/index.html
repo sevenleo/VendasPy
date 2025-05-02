@@ -139,11 +139,33 @@
             }
         }
 
+        // Função auxiliar para definir o estado de carregamento de um botão
+        function setLoadingState(button, isLoading) {
+            if (isLoading) {
+                button.disabled = true;
+                // Salva o texto original se ainda não foi salvo
+                if (!button.dataset.originalText) {
+                    button.dataset.originalText = button.innerHTML;
+                }
+                button.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Carregando...`;
+            } else {
+                button.disabled = false;
+                // Restaura o texto original
+                if (button.dataset.originalText) {
+                    button.innerHTML = button.dataset.originalText;
+                    // Remove o texto original salvo para a próxima vez
+                    delete button.dataset.originalText;
+                }
+            }
+        }
+
         async function testLogin() {
             const responseBox = document.getElementById('login-response');
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
+            const button = document.querySelector('.card-body button[onclick="testLogin()"]'); // Seleciona o botão de login
 
+            setLoadingState(button, true);
             try {
                 const response = await fetch(`${API_BASE}/login`, {
                     method: 'POST',
@@ -162,25 +184,51 @@
                 }
             } catch (error) {
                 responseBox.innerHTML = `<div class="alert alert-danger">Erro na requisição: ${error}</div>`;
+            } finally {
+                setLoadingState(button, false);
             }
         }
 
         async function getProdutos() {
-            const response = await fetch(`${API_BASE}/produtos/`);
-            displayResponse('produtos-response', await response.json());
+            const button = document.querySelector('button[onclick="getProdutos()"]');
+            setLoadingState(button, true);
+            try {
+                const response = await fetch(`${API_BASE}/produtos/`);
+                displayResponse('produtos-response', await response.json());
+            } catch (error) {
+                displayResponse('produtos-response', `<div class="alert alert-danger">Erro ao buscar produtos: ${error}</div>`);
+            } finally {
+                setLoadingState(button, false);
+            }
         }
 
         async function getProdutoById() {
             const id = prompt('Digite o ID do produto:');
             if(id) {
-                const response = await fetch(`${API_BASE}/produtos/${id}`);
-                displayResponse('produtos-response', await response.json());
+                const button = document.querySelector('button[onclick="getProdutoById()"]');
+                setLoadingState(button, true);
+                try {
+                    const response = await fetch(`${API_BASE}/produtos/${id}`);
+                    displayResponse('produtos-response', await response.json());
+                } catch (error) {
+                    displayResponse('produtos-response', `<div class="alert alert-danger">Erro ao buscar produto por ID: ${error}</div>`);
+                } finally {
+                    setLoadingState(button, false);
+                }
             }
         }
 
         async function countProdutos() {
-            const response = await fetch(`${API_BASE}/produtos/count`);
-            displayResponse('produtos-response', `Total de produtos: ${await response.json()}`);
+            const button = document.querySelector('button[onclick="countProdutos()"]');
+            setLoadingState(button, true);
+            try {
+                const response = await fetch(`${API_BASE}/produtos/count`);
+                displayResponse('produtos-response', `Total de produtos: ${await response.json()}`);
+            } catch (error) {
+                displayResponse('produtos-response', `<div class="alert alert-danger">Erro ao contar produtos: ${error}</div>`);
+            } finally {
+                setLoadingState(button, false);
+            }
         }
 
         function displayResponse(elementId, data) {
@@ -199,6 +247,8 @@
 
         async function createProduto() {
             const responseBox = document.getElementById('admin-produtos-response');
+            const button = document.getElementById('btn-create-produto');
+
             if (!authToken) {
                 responseBox.innerHTML = `<div class="alert alert-warning">Faça login primeiro.</div>`;
                 return;
@@ -242,6 +292,7 @@
                  return;
             }
 
+            setLoadingState(button, true);
             try {
                 const response = await fetch(`${API_BASE}/produtos/`, {
                     method: 'POST',
@@ -278,6 +329,7 @@
         async function deleteProduto() {
             const responseBox = document.getElementById('admin-produtos-response');
             const produtoId = document.getElementById('produto-delete-id').value;
+            const button = document.getElementById('btn-delete-produto');
 
             if (!authToken) {
                 responseBox.innerHTML = `<div class="alert alert-warning">Faça login primeiro.</div>`;
