@@ -56,17 +56,9 @@
             </div>
             <div class="card-body">
                 <h5>Adicionar Novo Produto</h5>
-                <div class="mb-3">
-                    <input type="text" id="produto-nome" class="form-control" placeholder="Nome do Produto">
-                </div>
-                <div class="mb-3">
-                    <textarea id="produto-descricao" class="form-control" placeholder="Descrição"></textarea>
-                </div>
-                <div class="mb-3">
-                    <input type="number" step="0.01" id="produto-preco" class="form-control" placeholder="Preço (ex: 19.99)">
-                </div>
-                <div class="mb-3">
-                    <input type="text" id="produto-imagem" class="form-control" placeholder="URL da Imagem (opcional)">
+                <div id="add-produto-form-container" class="mb-3">
+                    <!-- Formulário será gerado aqui -->
+                    <p>Carregando formulário...</p>
                 </div>
                 <button class="btn btn-primary mb-3" onclick="createProduto()" id="btn-create-produto" disabled>Adicionar Produto</button>
 
@@ -86,6 +78,66 @@
     <script>
         const API_BASE = 'http://localhost:8000';
         let authToken = '';
+
+        // Função para gerar o formulário dinamicamente
+        async function loadSchemaAndGenerateForm() {
+            const formContainer = document.getElementById('add-produto-form-container');
+            try {
+                const response = await fetch(`${API_BASE}/produtos/schema`);
+                if (!response.ok) {
+                    throw new Error(`Erro ao buscar schema: ${response.statusText}`);
+                }
+                const schemaData = await response.json();
+                formContainer.innerHTML = ''; // Limpa o container
+
+                schemaData.columns.forEach(col => {
+                    // Ignora a coluna 'id' pois é gerada automaticamente
+                    if (col.name === 'id') return;
+
+                    const div = document.createElement('div');
+                    div.className = 'mb-3';
+
+                    const label = document.createElement('label');
+                    label.htmlFor = `produto-${col.name}`;
+                    label.className = 'form-label';
+                    label.textContent = col.name.charAt(0).toUpperCase() + col.name.slice(1).replace('_', ' '); // Capitaliza e substitui underscore
+
+                    let input;
+                    if (col.type.includes('TEXT') || col.name === 'descricao') {
+                        input = document.createElement('textarea');
+                        input.className = 'form-control';
+                    } else {
+                        input = document.createElement('input');
+                        input.className = 'form-control';
+                        if (col.type.includes('INTEGER') || col.type.includes('FLOAT') || col.type.includes('NUMERIC')) {
+                            input.type = 'number';
+                            if (col.type.includes('FLOAT') || col.type.includes('NUMERIC')) {
+                                input.step = '0.01';
+                            }
+                        } else {
+                            input.type = 'text';
+                        }
+                    }
+
+                    input.id = `produto-${col.name}`;
+                    input.name = col.name;
+                    input.placeholder = `${label.textContent}${col.nullable ? ' (opcional)' : ''}`;
+                    if (!col.nullable && input.tagName !== 'TEXTAREA') {
+                        // Adiciona required para campos não nulos (exceto textarea por simplicidade)
+                        // A validação principal ainda é no backend
+                        // input.required = true;
+                    }
+
+                    div.appendChild(label);
+                    div.appendChild(input);
+                    formContainer.appendChild(div);
+                });
+
+            } catch (error) {
+                console.error('Erro ao gerar formulário:', error);
+                formContainer.innerHTML = `<div class="alert alert-danger">Erro ao carregar o formulário: ${error.message}</div>`;
+            }
+        }
 
         async function testLogin() {
             const responseBox = document.getElementById('login-response');
@@ -152,15 +204,41 @@
                 return;
             }
 
-            const produto = {
-                nome: document.getElementById('produto-nome').value,
-                descricao: document.getElementById('produto-descricao').value,
-                preco: parseFloat(document.getElementById('produto-preco').value),
-                imagem_url: document.getElementById('produto-imagem').value || null
-            };
+            const formContainer = document.getElementById('add-produto-form-container');
+            const inputs = formContainer.querySelectorAll('input, textarea');
+            const produto = {};
+            let valid = true;
+            let missingFields = [];
 
-            if (!produto.nome || !produto.descricao || isNaN(produto.preco)) {
-                 responseBox.innerHTML = `<div class="alert alert-warning">Nome, Descrição e Preço são obrigatórios.</div>`;
+            inputs.forEach(input => {
+                const colName = input.name;
+                let value = input.value.trim();
+                const isNullable = input.placeholder.includes('(opcional)'); // Verifica se o campo é opcional pelo placeholder
+
+                if (!value && !isNullable) {
+                    valid = false;
+                    missingFields.push(colName.charAt(0).toUpperCase() + colName.slice(1));
+                }
+
+                if (input.type === 'number') {
+                    if (value === '') {
+                        produto[colName] = null; // Envia null se vazio e opcional
+                    } else {
+                        const numValue = parseFloat(value);
+                        if (isNaN(numValue)) {
+                            valid = false;
+                            missingFields.push(`${colName.charAt(0).toUpperCase() + colName.slice(1)} (valor inválido)`);
+                        } else {
+                            produto[colName] = numValue;
+                        }
+                    }
+                } else {
+                    produto[colName] = value || null; // Envia null se vazio
+                }
+            });
+
+            if (!valid) {
+                 responseBox.innerHTML = `<div class="alert alert-warning">Campos obrigatórios faltando ou inválidos: ${missingFields.join(', ')}.</div>`;
                  return;
             }
 
@@ -176,14 +254,21 @@
                 const data = await response.json();
                 if (response.ok) {
                     responseBox.innerHTML = `<div class="alert alert-success">Produto criado com sucesso!</div><pre>${JSON.stringify(data, null, 2)}</pre>`;
-                    // Limpar formulário
-                    document.getElementById('produto-nome').value = '';
-                    document.getElementById('produto-descricao').value = '';
-                    document.getElementById('produto-preco').value = '';
-                    document.getElementById('produto-imagem').value = '';
+                    // Limpar formulário dinâmico
+                    inputs.forEach(input => input.value = '');
                     getProdutos(); // Atualiza a lista
                 } else {
-                    responseBox.innerHTML = `<div class="alert alert-danger">Erro ao criar produto: ${data.detail || response.statusText}</div>`;
+                    // Tenta extrair a mensagem de erro detalhada do FastAPI
+                    let errorMsg = response.statusText;
+                    if (data.detail) {
+                        if (Array.isArray(data.detail)) {
+                            // Formata múltiplos erros de validação
+                            errorMsg = data.detail.map(err => `${err.loc.join('.')} - ${err.msg}`).join('<br>');
+                        } else if (typeof data.detail === 'string') {
+                            errorMsg = data.detail;
+                        }
+                    }
+                    responseBox.innerHTML = `<div class="alert alert-danger">Erro ao criar produto (${response.status}):<br>${errorMsg}</div>`;
                 }
             } catch (error) {
                 responseBox.innerHTML = `<div class="alert alert-danger">Erro na requisição: ${error}</div>`;
@@ -236,6 +321,9 @@
                 enableAdminButtons(); // Habilita botões se o login for bem-sucedido
             }
         }
+
+        // Chama a função para gerar o formulário quando o DOM estiver pronto
+        document.addEventListener('DOMContentLoaded', loadSchemaAndGenerateForm);
 
     </script>
 </body>

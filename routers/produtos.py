@@ -1,16 +1,54 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import List
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
+# Remover import inspect e engine, pois não serão mais usados aqui
+from typing import List, Dict, Any # Importar Dict e Any
 
 import models
-import schemas
+import schemas # Importar schemas para usar Produto
 import database
+# Remover import engine
 import dependencies
 
 router = APIRouter(
     prefix="/produtos",
     tags=["Produtos"],
 )
+
+# Endpoint para obter o schema da tabela Produto usando Pydantic
+@router.get("/schema", response_model=Dict[str, Any])
+def get_produto_schema():
+    produto_schema = schemas.Produto.model_json_schema()
+    properties = produto_schema.get('properties', {})
+    required_fields = set(produto_schema.get('required', []))
+
+    columns_info = []
+    for prop_name, prop_details in properties.items():
+        # Determina o tipo
+        field_type = prop_details.get('type')
+        if not field_type and 'anyOf' in prop_details:
+            # Tenta encontrar um tipo não nulo em 'anyOf' (comum para Optional)
+            types = [t.get('type') for t in prop_details['anyOf'] if t.get('type') != 'null']
+            field_type = types[0] if types else 'any'
+        elif not field_type and 'format' in prop_details:
+             # Caso especial para tipos como datetime ou decimal
+             field_type = prop_details.get('format', 'any')
+        elif not field_type:
+            field_type = 'any' # Fallback
+
+        columns_info.append({
+            "name": prop_name,
+            "type": field_type,
+            "nullable": prop_name not in required_fields,
+            "primary_key": prop_name == 'id' # Suposição comum para PK
+        })
+
+    schema_info = {
+        "table_name": models.Produto.__tablename__,
+        "columns": columns_info
+    }
+    return schema_info
 
 # Endpoint público para obter a contagem de produtos
 @router.get("/count", response_model=int)
