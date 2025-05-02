@@ -25,6 +25,10 @@ def get_produto_schema():
 
     columns_info = []
     for prop_name, prop_details in properties.items():
+        # Ignora o campo 'criado_em' para não aparecer no formulário
+        if prop_name == 'criado_em':
+            continue
+
         # Determina o tipo
         field_type = prop_details.get('type')
         if not field_type and 'anyOf' in prop_details:
