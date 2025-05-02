@@ -18,7 +18,8 @@ class ProdutoBase(BaseModel):
 
     # Pydantic v2 config for ORM mode
     class Config:
-        orm_mode = True
+       #orm_mode = True
+       from_attributes = True
         # If using Pydantic v1, use: from_attributes = True
 
 # Schema para criação de Produto (herda de ProdutoBase)

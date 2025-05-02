@@ -1,0 +1,22 @@
+.card {
+    margin-bottom: 1.5rem;
+}
+
+.response-box {
+    background-color: #f8f9fa;
+    border-radius: 0.25rem;
+    padding: 1rem;
+    margin-top: 1rem;
+    border: 1px solid #dee2e6;
+}
+
+pre {
+    background-color: #e9ecef;
+    padding: 1rem;
+    border-radius: 0.25rem;
+    white-space: pre-wrap;
+}
+
+.alert {
+    margin-bottom: 0;
+}
