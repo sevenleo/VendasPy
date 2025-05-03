@@ -14,7 +14,7 @@ class ProdutoBase(BaseModel):
     imagem_url: Optional[str] = None
     thumbnail_url: Optional[str] = None
     categoria: Optional[str] = None
-    subcategoria: Optional[str] = None
+    subcategorias: Optional[str] = None
 
     # Pydantic v2 config for ORM mode
     class Config:

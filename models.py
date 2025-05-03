@@ -16,11 +16,11 @@ class Produto(Base):
     imagem_url = Column(String(512))
     thumbnail_url = Column(String(512))
     categoria = Column(String(128))
-    subcategoria = Column(String(128))
+    subcategorias = Column(String(128))
     # Usando timezone=True para TIMESTAMP WITH TIME ZONE
     # Default no lado do servidor é geralmente preferível, mas func.now() funciona bem
     criado_em = Column(DateTime(timezone=True), server_default=func.now())
 
     # O índice idx_nome já está coberto pelo index=True no campo nome
     # Se precisar de índices compostos ou outros tipos, defina-os aqui:
-    # __table_args__ = (Index('idx_categoria_subcategoria', 'categoria', 'subcategoria'),)
+    # __table_args__ = (Index('idx_categoria_subcategorias', 'categoria', 'subcategorias'),)
