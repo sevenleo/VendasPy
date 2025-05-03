@@ -10,7 +10,7 @@ class Produto(Base):
     nome = Column(String(255), nullable=False, index=True)
     descricao = Column(Text)
     valor = Column(Numeric(10, 2), nullable=False)
-    nota = Column(SmallInteger, nullable=False)
+    nota = Column(SmallInteger, nullable=True)
     link_principal = Column(String(512), nullable=False)
     link_secundario = Column(String(512))
     imagem_url = Column(String(512))

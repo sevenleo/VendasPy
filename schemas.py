@@ -8,7 +8,7 @@ class ProdutoBase(BaseModel):
     nome: str
     descricao: Optional[str] = None
     valor: decimal.Decimal # Use decimal.Decimal for currency/numeric precision
-    nota: int
+    nota: Optional[int]
     link_principal: str
     link_secundario: Optional[str] = None
     imagem_url: Optional[str] = None
